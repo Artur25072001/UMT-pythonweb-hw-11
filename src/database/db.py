@@ -1,4 +1,5 @@
 import contextlib
+from src.conf.config import settings
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
@@ -6,8 +7,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
-from src.conf.config import config
 
 
 class DatabaseSessionManager:
@@ -31,7 +30,7 @@ class DatabaseSessionManager:
             await session.close()
 
 
-sessionmanager = DatabaseSessionManager(config.DB_URL)
+sessionmanager = DatabaseSessionManager(settings.DB_URL)
 
 
 async def get_db():

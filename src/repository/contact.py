@@ -1,9 +1,9 @@
 import datetime
 from typing import List, Optional
-from sqlalchemy import select, or_, and_, extract
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Contact
+from src.database.models import Contact, User
 from src.schemas import ContactUpdate, ContactCreate
 
 
@@ -15,6 +15,7 @@ class ContactRepository:
         self,
         skip: int,
         limit: int,
+        user: User,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         email: Optional[str] = None,
@@ -31,29 +32,29 @@ class ContactRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_contact_by_id(self, contact_id: int) -> Contact | None:
-        stmt = select(Contact).filter_by(id=contact_id)
+    async def get_contact_by_id(self, contact_id: int, user: User) -> Contact | None:
+        stmt = select(Contact).filter_by(id=contact_id, user=user)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create_contact(self, body: ContactCreate) -> Contact:
-        contact = Contact(**body.model_dump())
+    async def create_contact(self, body: ContactCreate, user: User) -> Contact:
+        contact = Contact(**body.model_dump(), user=user)
         self.db.add(contact)
         await self.db.commit()
         await self.db.refresh(contact)
-        return contact
+        return await self.get_contact_by_id(contact.id, user)
 
-    async def remove_contact(self, contact_id: int) -> Contact | None:
-        contact = await self.get_contact_by_id(contact_id)
+    async def remove_contact(self, contact_id: int, user: User) -> Contact | None:
+        contact = await self.get_contact_by_id(contact_id, user)
         if contact:
             await self.db.delete(contact)
             await self.db.commit()
         return contact
 
     async def update_contact(
-        self, contact_id: int, body: ContactUpdate
+        self, contact_id: int, body: ContactUpdate, user: User
     ) -> Contact | None:
-        contact = await self.get_contact_by_id(contact_id)
+        contact = await self.get_contact_by_id(contact_id, user)
         if contact:
             update_data = body.model_dump(exclude_unset=True)
             for key, value in update_data.items():
