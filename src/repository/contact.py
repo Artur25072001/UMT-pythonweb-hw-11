@@ -20,7 +20,7 @@ class ContactRepository:
         last_name: Optional[str] = None,
         email: Optional[str] = None,
     ):
-        stmt = select(Contact)
+        stmt = select(Contact).filter_by(user=user)
         if first_name:
             stmt = stmt.filter(Contact.first_name.ilike(f"%{first_name}%"))
         if last_name:
@@ -64,10 +64,10 @@ class ContactRepository:
             await self.db.refresh(contact)
         return contact
 
-    async def get_upcoming_birthdays(self) -> List[Contact]:
+    async def get_upcoming_birthdays(self, user: User) -> List[Contact]:
         today = datetime.date.today()
         upcoming_date = today + datetime.timedelta(days=7)
-        stmt = select(Contact)
+        stmt = select(Contact).filter_by(user=user)
         result = await self.db.execute(stmt)
         all_contacts = result.scalars().all()
         near_birthdays = []

@@ -34,7 +34,7 @@ async def get_upcoming_birthdays(
     db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
     contact_service = ContactService(db)
-    contacts = await contact_service.get_upcoming_birthdays()
+    contacts = await contact_service.get_upcoming_birthdays(user)
     return contacts
 
 

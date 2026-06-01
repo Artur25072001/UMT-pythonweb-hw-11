@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from src.schemas import User
 from src.services.auth import get_current_user
 from src.services.users import UserService
 from src.database.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.services.files import UploadFileService
+from src.services.upload_file import UploadFileService
 from fastapi import File, UploadFile
 from src.conf.config import settings
+from src.conf.limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["users"])
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get(
@@ -29,7 +27,9 @@ async def update_avatar_user(
     db: AsyncSession = Depends(get_db),
 ):
     avatar_url = UploadFileService(
-        settings.CLD_NAME, settings.CLD_API_KEY, settings.CLD_API_SECRET
+        settings.CLOUDINARY_NAME,
+        settings.CLOUDINARY_API_KEY,
+        settings.CLOUDINARY_API_SECRET,
     ).upload_file(file, user.username)
 
     user_service = UserService(db)

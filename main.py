@@ -1,10 +1,21 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
 from src.api import contact, utils, auth, users
+from src.conf.limiter import limiter
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.limiter = limiter
+    app.state._rate_limit_exceeded_handler = _rate_limit_exceeded_handler
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 origins = ["http://localhost:8000"]
 app.add_middleware(
     CORSMiddleware,

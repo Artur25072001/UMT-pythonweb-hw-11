@@ -12,8 +12,8 @@ class ContactService:
     async def create_contact(self, body: ContactCreate, user: User):
         return await self.repository.create_contact(body, user)
 
-    async def get_upcoming_birthdays(self):
-        return await self.repository.get_upcoming_birthdays()
+    async def get_upcoming_birthdays(self, user: User):
+        return await self.repository.get_upcoming_birthdays(user)
 
     async def get_contacts(
         self,
