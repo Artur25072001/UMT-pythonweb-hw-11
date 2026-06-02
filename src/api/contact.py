@@ -1,3 +1,13 @@
+"""
+Contact management API routes.
+
+This module provides CRUD endpoints for managing contacts, including
+searching and filtering contacts and retrieving upcoming birthdays.
+
+:author: Artur
+:version: 1.0.0
+"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Depends, status, Query
@@ -22,6 +32,28 @@ async def read_contacts(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Retrieve a list of contacts for the current user.
+
+    Supports optional filtering by first name, last name, and email.
+
+    :param skip: Number of contacts to skip (pagination offset)
+    :type skip: int
+    :param limit: Maximum number of contacts to return
+    :type limit: int
+    :param first_name: Filter by first name (partial match)
+    :type first_name: Optional[str]
+    :param last_name: Filter by last name (partial match)
+    :type last_name: Optional[str]
+    :param email: Filter by email (partial match)
+    :type email: Optional[str]
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: List of contacts
+    :rtype: List[ContactResponse]
+    """
     contact_service = ContactService(db)
     contacts = await contact_service.get_contacts(
         skip, limit, first_name, last_name, email, user
@@ -33,6 +65,16 @@ async def read_contacts(
 async def get_upcoming_birthdays(
     db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
 ):
+    """
+    Retrieve contacts with upcoming birthdays within the next 7 days.
+
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: List of contacts with upcoming birthdays
+    :rtype: List[ContactResponse]
+    """
     contact_service = ContactService(db)
     contacts = await contact_service.get_upcoming_birthdays(user)
     return contacts
@@ -44,6 +86,19 @@ async def read_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Retrieve a single contact by its ID.
+
+    :param contact_id: ID of the contact to retrieve
+    :type contact_id: int
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: The requested contact
+    :rtype: ContactResponse
+    :raises HTTPException 404: If the contact is not found
+    """
     contact_service = ContactService(db)
     contact = await contact_service.get_contact(contact_id, user)
     if contact is None:
@@ -59,6 +114,18 @@ async def create_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Create a new contact for the current user.
+
+    :param body: Contact creation data
+    :type body: ContactCreate
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: The newly created contact
+    :rtype: ContactResponse
+    """
     contact_service = ContactService(db)
     return await contact_service.create_contact(body, user)
 
@@ -70,6 +137,21 @@ async def update_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Update an existing contact by its ID.
+
+    :param body: Contact update data (partial update supported)
+    :type body: ContactUpdate
+    :param contact_id: ID of the contact to update
+    :type contact_id: int
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: The updated contact
+    :rtype: ContactResponse
+    :raises HTTPException 404: If the contact is not found
+    """
     contact_service = ContactService(db)
     contact = await contact_service.update_contact(contact_id, body, user)
     if contact is None:
@@ -85,6 +167,19 @@ async def remove_contact(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Delete a contact by its ID.
+
+    :param contact_id: ID of the contact to delete
+    :type contact_id: int
+    :param db: Database session dependency
+    :type db: AsyncSession
+    :param user: Currently authenticated user
+    :type user: User
+    :return: None (HTTP 204 No Content)
+    :rtype: None
+    :raises HTTPException 404: If the contact is not found
+    """
     contact_service = ContactService(db)
     contact = await contact_service.remove_contact(contact_id, user)
     if contact is None:
